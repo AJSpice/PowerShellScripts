@@ -1,0 +1,28 @@
+# Install the ImportExcel module if it's not already installed
+if (-not (Get-Module ImportExcel)) {
+    Install-Module ImportExcel -Scope CurrentUser
+}
+
+# Set the output path for the Excel sheet
+$outputPath = "C:\path\to\file"
+
+# Define the user accounts
+$users = "User1", "User2"
+
+# Create a hashtable to store the memberships for each user
+$memberships = @{}
+foreach ($name in $users) {
+    $groups = Get-ADPrincipalGroupMembership -Identity $name | Select-Object Name
+    $memberships[$name] = $groups.Name
+}
+
+# Convert the hashtable to an array of objects and export to Excel
+$membershipsObject = $memberships.GetEnumerator() | Sort-Object Name | ForEach-Object {
+    [pscustomobject]@{
+        User = $_.Key
+        Memberships = $_.Value -join ","
+    }
+}
+
+$membershipsObject | Export-Excel -Path $outputPath -AutoSize -AutoFilter -FreezeTopRow -WorksheetName "AD Memberships"
+
