@@ -1,0 +1,29 @@
+### Import user info from CSV file
+	Import-Csv -Path "C:\path\to\file" | foreach {
+
+	}
+	
+	Enter-PSSession -ComputerName computer1 -Authentication Kerberos
+
+	Get-RemoteMailbox -Identity johnd@company.com
+	
+################ --- ################ --- ################ --- ################ --- 
+	
+### Import group membership from CSV file
+	Import-Csv -Path "C:\path\to\file" | foreach {
+
+# Access fields by their column name
+    $title = $row.title
+	$department = $row.Department
+    $memberships = $row.Memberships
+	
+##Add group memberships to the user
+	foreach ($group in $memberships) {
+	Add-ADGroupMember -Identity $group -Members $user
+	}
+
+
+}
+
+##confirm the change to see if membership is added to the user --insert username into user
+	(Get-ADUser username -Properties memberof).memberof | ForEach-Object { (Get-ADGroup $_).Name }
