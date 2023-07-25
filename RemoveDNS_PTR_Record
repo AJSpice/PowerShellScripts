@@ -1,0 +1,48 @@
+#$fqdn = ([System.Net.Dns]::GetHostByName(($env:computerName))).Hostname
+#Get-DnsServerResourceRecord -computername DC1 -ZoneName zone1 -RecordType $fqdn
+
+#$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -eq "Wi-fi" -and $_.PrefixOrigin -eq "Dhcp"} | Select-Object -ExpandProperty IPAddress) -split "\." | Select-Object -Last 1
+
+
+#$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -eq "Ethernet 2"} | select-object -ExpandProperty IPAddress) -split "\." |Select-Object -last 1
+
+#####**Testing "Get" script**#######
+
+# Gets the last octet of the IP Address from GP
+	
+	$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -like "192.168.1.*"} | select-object -ExpandProperty IPAddress) -split "\." |Select-Object -last 1
+	
+#gets the record that matches this ip address from DC1
+	
+	Get-DnsServerResourceRecord -computername DC1 -ZoneName zone1 -name $ip
+
+
+######**Real script**##########
+
+# Gets the last octet of the IP Address from GP on this host
+
+	$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -like "zone1*"} | select-object -ExpandProperty IPAddress) -split "\." |	Select-Object -last 1
+	
+#removes the record that matches this ip address from DC1
+
+	Remove-DnsServerResourceRecord -computername DC1 -ZoneName zone1 -name $ip
+	
+#flush and register dns on the host machine
+
+	ipconfig /flushdns
+	ipconfig /registerdns
+	
+	
+	############################
+	
+	
+# Gets the last octet of the IP Address from VPN
+	
+	$ip = Read-Host "Enter last octet of IP address"
+	
+#gets the record that matches this ip address from DC1
+	
+	Remove-DnsServerResourceRecord -computername DC1 -ZoneName zone1 -name $ip
+	
+	ipconfig /flushdns
+	ipconfig /registerdns
