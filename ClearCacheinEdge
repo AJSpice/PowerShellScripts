@@ -1,0 +1,22 @@
+# Set variables
+
+	$EdgeAppData = "C:\Users\$user\AppData\Local\Microsoft\Edge\User Data\Default"
+	$user = (Get-WmiObject -Class Win32_ComputerSystem).UserName.Split("\")[1]
+	$detection = "C:\clearedcache.txt"
+	$dateandtime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+	New-Item -Itemtype file -path $detection
+
+# Close all Edge windows
+	
+	Stop-Process -Name msedge -Force
+
+# Wait 5 seconds
+
+	Start-Sleep -Seconds 5
+
+# Clear Edge cache and cookies
+			if ((Test-Path $EdgeAppData)) {
+		Get-ChildItem -Path $EdgeAppData -Recurse | Where-Object { $_.Name -match "_Cache_|_GPUCache_|_Media Cache_|_data_3|Cookies|History" } | Remove-Item -Recurse -Force
+  }
+
+Add-Content $detection "cleared cache in edge script was run on $dateandtime"
