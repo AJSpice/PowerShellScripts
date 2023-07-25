@@ -1,0 +1,22 @@
+## Get the username --insert username into "user"
+$user = Get-ADUser -identity "User"
+## Defines the group memberships to be added to the "user"
+$Teller_Memberships = "Group1" , "Group2"
+## Defines the Department of the specified user
+$Department = (Get-ADUser $user -Properties department) | Select-Object -ExpandProperty department
+
+
+##Add group memberships to the user
+foreach ($group in $sales_Memberships) {
+  Add-ADGroupMember -Identity $group -Members $user
+}
+
+##confirm the change to see if membership is added to the user --insert username into user
+(Get-ADUser username -Properties memberof).memberof | ForEach-Object { (Get-ADGroup $_).Name }
+
+
+##finds the root OU of the user
+##((Get-ADUser -Identity username -Properties DistinguishedName).DistinguishedName -replace '^CN=[^,]+,|,DC=[^,]+|,OU=.+$','') -replace '^CN=[^,]+,|,DC=[^,]+',''
+
+##finds all OU's of the user
+##(Get-ADUser -Identity username -Properties DistinguishedName).DistinguishedName -replace '^CN=[^,]+,|,DC=[^,]+',''
