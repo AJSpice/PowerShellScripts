@@ -1,0 +1,44 @@
+#change a users manager
+
+#grabs input from the user for the user and new manager
+$users = read-host ("Who are the users that need to have their manager changed?`nThese need to be entered as CSV. Ex: johnd,janed,joes `nEnter them now")
+$newmanager = read-host ("`nWho is the new manager?`nThis needs to be entered as all lowercase")
+
+#split the user input into an array of individual users
+$users = $users -split ','
+
+#if there are no users specified the script will exit
+if ($users.Length -eq 0){
+    write-host ("No users specified")
+    start-sleep -seconds 10
+    exit
+}
+
+#outputs a confirmation message for each user in the list
+Foreach($user in $users){
+
+    #grabs the current manager of the user specified
+    $currentmanager = Get-ADUser -Identity $user -properties * |Select-Object -ExpandProperty manager
+    $currentmanagername = $currentmanager.Split(',')[0].Substring(3)
+
+    #outputs to user and stores their confirmation
+    $confirm = read-host ("`nThe current manager of $user is: ($currentmanagername) and the new manager you would like to replace them with is: ($newmanager).`nIf this is correct press y")
+
+    #if the user enters "y" then the manager will be replaced with what the user confirmed is the new manager
+    #this also prints and confirms the new manager
+    if ($confirm -eq "y"){
+        Set-ADUser -identity $user -manager $newmanager
+        $confirmmanager = Get-ADUser -Identity $user -properties *| select-object manager
+        $confirmmanagername = $confirmmanager.manager.Split(',')[0].Substring(3)
+        echo ("The manager for user $user was changed to $confirmmanagername.`n")
+    }
+
+    #else the script will move onto the next user
+    else {
+        echo ("`nNo changes made for user $user.")
+    }
+}
+
+write-host ("`nScript completed.")
+start-sleep -seconds 10
+exit
