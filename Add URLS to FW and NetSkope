@@ -1,0 +1,44 @@
+# Define the paths to the Palo Alto blacklists to be modified
+$blacklist_site1 = "\\1.2.3.4\c$\path\to\AnthonyTest.txt"
+$blacklist_site2 = "\\1.2.3.4\c$\path\to\AnthonyTest.txt"
+
+# Content of blacklists (needed for parsing later)
+$blacklist_site1_content = Get-Content $blacklist_site1
+$blacklist_site2_content = Get-Content $blacklist_site2
+
+# Import the CSV for the new URLs to be added to the blacklists and NetSkope
+$new_urls = Import-Csv "C:\path\to\file\new_urls.csv"
+
+# Create empty array to store the URLs for NetSkope
+$netskope_urls = @()
+
+# Start a loop for each URL in the CSV: appends to the blacklist_x_content and NetSkope URLs array
+foreach ($row in $new_urls) {
+    # Trim whitespace from the URLs
+    $url = $row.urls.Trim()
+
+    # Check if the URL is not empty and not already present in the blacklist_site1
+    # If pass: append to the respective blacklist
+    if (![string]::IsNullOrWhiteSpace($url) -and $url -notin $blacklist_1_content) {
+        # Append the URL to the blacklist files
+        Add-Content -Path $blacklist_1 -Value $url
+    }
+
+    # Check if the URL is not empty and not already present in the blacklist_2
+    # If pass: append to the respective blacklist
+    if (![string]::IsNullOrWhiteSpace($url) -and $url -notin $blacklist_2_content) {
+        # Append the URL to the blacklist files
+        Add-Content -Path $blacklist_2 -Value $url
+    }
+
+    # Append the formatted URL to the $netskope_urls array
+    $netskope_urls += $url + ",*." + $url
+}
+
+# Join the $netskope_urls array into a comma-separated string
+$netskope_urls_string = $netskope_urls -join ','
+
+# Make API request
+$apiUrl = 'https://unique-portal.goskope.com/api/v1/updateUrlList?name=AnthonyTestList&list={0}&token=12345' -f $netskope_urls_string
+$response = Invoke-RestMethod -Uri $apiUrl -Method 'PUT'
+$response | ConvertTo-Json
